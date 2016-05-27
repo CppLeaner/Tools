@@ -11,14 +11,14 @@ resFiles = []
 resFilesQuoted = []
 luaFilesNameDict = {}
 
-pngRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.png')
-jpgRegExString =re.compile(r'[0-9a-zA-Z\s_/-]+.jpg')
-plistRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.plist')
-csbRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.csb')
-wavRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.wav')
-atlasRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.atlas')
-pvrRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.pvr')
-jsonRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.json')
+pngRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.png[\"\']')
+jpgRegExString =re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.jpg[\"\']')
+plistRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.plist[\"\']')
+csbRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.csb[\"\']')
+wavRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.wav[\"\']')
+atlasRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.atlas[\"\']')
+pvrRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.pvr[\"\']')
+jsonRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.json[\"\']')
 
 def getFilesAbsolutelyPath(ImageFilePath):
     currentfiles = os.listdir(ImageFilePath)
@@ -43,7 +43,7 @@ resFilesVector = getFilesAbsolutelyPath(resFileRootDir)
 resFiles = handleBackslash(resFilesVector)
 
 def readLuaFile(fileName):
-    f = open(fileName)
+    f = open(fileName, 'r')
     fileContents = f.readlines()
     for line in fileContents:
         num = fileContents.index(line)
@@ -58,36 +58,53 @@ def readLuaFile(fileName):
         jsonQuoted = jsonRegExString.search(line)
         if pngQuoted:
             quotedStr = pngQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
         if jpgQuoted:
             quotedStr = jpgQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
         if plistQuoted:
             quotedStr = plistQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
         if csbQuoted:
             quotedStr = csbQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
         if wavQuoted:
             quotedStr = wavQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
         if atlasQuoted:
             quotedStr = atlasQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName            
         if pvrQuoted:
             quotedStr = pvrQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
         if jsonQuoted:
             quotedStr = jsonQuoted.group()
+            length = len(quotedStr)
+            quotedStr = quotedStr[1:length-1]
             resFilesQuoted.append(quotedStr)
             luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+    f.close()
 
 def matchResFileName(fileQuoted):
     f = open(logFile, 'a')
