@@ -1,0 +1,115 @@
+import os
+import os.path
+import re
+
+luaFileRootDir = "./src"
+resFileRootDir = "./res"
+logFile = "./log.txt"
+
+luaFiles = []
+resFiles = []
+resFilesQuoted = []
+luaFilesNameDict = {}
+
+pngRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.png')
+jpgRegExString =re.compile(r'[0-9a-zA-Z\s_/-]+.jpg')
+plistRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.plist')
+csbRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.csb')
+wavRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.wav')
+atlasRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.atlas')
+pvrRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.pvr')
+jsonRegExString = re.compile(r'[0-9a-zA-Z\s_/-]+.json')
+
+def getFilesAbsolutelyPath(ImageFilePath):
+    currentfiles = os.listdir(ImageFilePath)
+    filesVector = []
+    for file_name in currentfiles:
+        fullPath = os.path.join(ImageFilePath, file_name)
+        if os.path.isdir(fullPath):
+            newfiles = getFilesAbsolutelyPath(fullPath)
+            filesVector.extend(newfiles)
+        else:
+            filesVector.append(fullPath)
+    return filesVector
+
+def handleBackslash(resFilesVector):
+    newFilesVector = []
+    for name in resFilesVector:
+        newFilesVector.append(name.replace('\\', '/'))
+    return newFilesVector
+
+luaFiles = getFilesAbsolutelyPath(luaFileRootDir)
+resFilesVector = getFilesAbsolutelyPath(resFileRootDir)
+resFiles = handleBackslash(resFilesVector)
+
+def readLuaFile(fileName):
+    f = open(fileName)
+    fileContents = f.readlines()
+    for line in fileContents:
+        num = fileContents.index(line)
+        num = num + 1
+        pngQuoted = pngRegExString.search(line)
+        jpgQuoted = jpgRegExString.search(line)
+        plistQuoted = plistRegExString.search(line)
+        csbQuoted = csbRegExString.search(line)
+        wavQuoted = wavRegExString.search(line)
+        atlasQuoted = atlasRegExString.search(line)
+        pvrQuoted = pvrRegExString.search(line)
+        jsonQuoted = jsonRegExString.search(line)
+        if pngQuoted:
+            quotedStr = pngQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+        if jpgQuoted:
+            quotedStr = jpgQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+        if plistQuoted:
+            quotedStr = plistQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+        if csbQuoted:
+            quotedStr = csbQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+        if wavQuoted:
+            quotedStr = wavQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+        if atlasQuoted:
+            quotedStr = atlasQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName            
+        if pvrQuoted:
+            quotedStr = pvrQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+        if jsonQuoted:
+            quotedStr = jsonQuoted.group()
+            resFilesQuoted.append(quotedStr)
+            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+
+def matchResFileName(fileQuoted):
+    f = open(logFile, 'a')
+    quotedRegEx = re.compile(fileQuoted, re.IGNORECASE)
+    count = 0
+    for name in resFiles:
+        nameQuoted = quotedRegEx.search(name)
+        if nameQuoted:
+            if 0 != cmp(nameQuoted.group(0), fileQuoted):
+                f.write("error in " + luaFilesNameDict[fileQuoted] + "\n")
+            break
+        else:
+            count = count + 1
+        if count == len(resFiles):
+            f.write("no such file: " + "'" + fileQuoted + "'" + " -> " + luaFilesNameDict[fileQuoted] + "\n")
+    f.close()
+
+for name in luaFiles:
+    readLuaFile(name)
+
+f = open(logFile, 'w')
+f.close()
+
+for name in resFilesQuoted:
+    matchResFileName(name)
