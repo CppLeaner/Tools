@@ -1,0 +1,37 @@
+import os
+import os.path
+import Image
+
+# Please reset the root directory Path !
+ImageFilePath = "./res"
+
+def getFilesAbsolutelyPath(ImageFilePath):
+    currentfiles = os.listdir(ImageFilePath)
+    filesVector = []
+    for file_name in currentfiles:
+        fullPath = os.path.join(ImageFilePath, file_name)
+        if os.path.isdir(fullPath):
+            newfiles = getFilesAbsolutelyPath(fullPath)
+            filesVector.extend(newfiles)
+        else:
+            filesVector.append(fullPath)
+    return filesVector
+
+filePathVector = getFilesAbsolutelyPath(ImageFilePath)
+pngFile = []
+
+for filename in filePathVector:
+    flag = filename.find(".png")
+    if flag != -1:
+        im = Image.open(filename)
+        mode = im.getbands()
+        if mode[0] != "P":
+            pngFile.append(filename) 
+            print(mode)
+        print(mode)
+       
+# pngquant.exe path
+pngquantPath = "C:\Users\jiayong.averson\Desktop\pngquant.exe -f --ext .png --quality 50-80 "
+#get .Png File Name
+for filePath in pngFile:
+	os.system(pngquantPath + filePath)
