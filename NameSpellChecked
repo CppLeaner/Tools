@@ -1,24 +1,44 @@
 import os
 import os.path
 import re
+import chardet
 
 luaFileRootDir = "./src"
 resFileRootDir = "./res"
-logFile = "./log.txt"
+resPlatFormRootDir = "./res_platform/windows"
 
+log_file = "./log.txt"
+special_log_file = "./special_log.txt"
+illegal_file = "./illegal_character.txt"
+illegal_res_file = "./illegal_character_res.txt"
+
+#store the msg
 luaFiles = []
 resFiles = []
-resFilesQuoted = []
+resFilesQuoted = {}
 luaFilesNameDict = {}
+special_files = {}
 
-pngRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.png[\"\']')
-jpgRegExString =re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.jpg[\"\']')
-plistRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.plist[\"\']')
-csbRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.csb[\"\']')
-wavRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.wav[\"\']')
-atlasRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.atlas[\"\']')
-pvrRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.pvr[\"\']')
-jsonRegExString = re.compile(r'[\"\'][0-9a-zA-Z\s_/-]+\.json[\"\']')
+# special mode
+specialPngRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.png[\'\"]')
+specialJpgRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.jpg[\'\"]')
+specialPlistRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.plist[\'\"]')
+specialCsbRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.csb[\'\"]')
+specialWavRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.wav[\'\"]')
+specialAtlasRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.atlas[\'\"]')
+specialPvrRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.pvr[\'\"]')
+specialJsonRegEx = re.compile(r'[\'\"][\w\s/-]+[\'\"]\s+\.\.\s+[\w\s/-]+\s+\.\.\s+[\'\"]\.json[\'\"]')
+
+# normal mode
+pngRegExString = re.compile(r'[\"\'][\w\s/-]+\.png[\"\']')
+jpgRegExString =re.compile(r'[\"\'][\w\s/-]+\.jpg[\"\']')
+plistRegExString = re.compile(r'[\"\'][\w\s/-]+\.plist[\"\']')
+csbRegExString = re.compile(r'[\"\'][\w\s/-]+\.csb[\"\']')
+wavRegExString = re.compile(r'[\"\'][\w\s/-]+\.wav[\"\']')
+atlasRegExString = re.compile(r'[\"\'][\w\s/-]+\.atlas[\"\']')
+pvrRegExString = re.compile(r'[\"\'][\w\s/-]+\.pvr[\"\']')
+jsonRegExString = re.compile(r'[\"\'][\w\s/-
+    ]+\.json[\"\']')
 
 def getFilesAbsolutelyPath(ImageFilePath):
     currentfiles = os.listdir(ImageFilePath)
@@ -40,93 +60,146 @@ def handleBackslash(resFilesVector):
 
 luaFiles = getFilesAbsolutelyPath(luaFileRootDir)
 resFilesVector = getFilesAbsolutelyPath(resFileRootDir)
+resPlatFormFiles = getFilesAbsolutelyPath(resPlatFormRootDir)
 resFiles = handleBackslash(resFilesVector)
+resFiles.extend(handleBackslash(resPlatFormFiles))
 
 def readLuaFile(fileName):
     f = open(fileName, 'r')
+    mdError = open(illegal_file, 'a')
     fileContents = f.readlines()
-    for line in fileContents:
-        num = fileContents.index(line)
-        num = num + 1
-        pngQuoted = pngRegExString.search(line)
-        jpgQuoted = jpgRegExString.search(line)
-        plistQuoted = plistRegExString.search(line)
-        csbQuoted = csbRegExString.search(line)
-        wavQuoted = wavRegExString.search(line)
-        atlasQuoted = atlasRegExString.search(line)
-        pvrQuoted = pvrRegExString.search(line)
-        jsonQuoted = jsonRegExString.search(line)
+    lineNums = len(fileContents)
+    count = 0
+    while count < lineNums:
+        lineContent = fileContents[count]
+        lineNum = count + 1
+        ################ normal form ################
+        pngQuoted = pngRegExString.search(lineContent)
+        jpgQuoted = jpgRegExString.search(lineContent)
+        plistQuoted = plistRegExString.search(lineContent)
+        csbQuoted = csbRegExString.search(lineContent)
+        wavQuoted = wavRegExString.search(lineContent)
+        atlasQuoted = atlasRegExString.search(lineContent)
+        pvrQuoted = pvrRegExString.search(lineContent)
+        jsonQuoted = jsonRegExString.search(lineContent)
+        quotedStr = "quotedStr"
         if pngQuoted:
             quotedStr = pngQuoted.group()
-            length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
-        if jpgQuoted:
+        elif jpgQuoted:
             quotedStr = jpgQuoted.group()
-            length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
-        if plistQuoted:
+        elif plistQuoted:
             quotedStr = plistQuoted.group()
-            length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
-        if csbQuoted:
+        elif csbQuoted:
             quotedStr = csbQuoted.group()
-            length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
-        if wavQuoted:
+        elif wavQuoted:
             quotedStr = wavQuoted.group()
-            length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
-        if atlasQuoted:
-            quotedStr = atlasQuoted.group()
-            length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName            
-        if pvrQuoted:
+        elif atlasQuoted:
+            quotedStr = atlasQuoted.group()           
+        elif pvrQuoted:
             quotedStr = pvrQuoted.group()
-            length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
-        if jsonQuoted:
+        elif jsonQuoted:
             quotedStr = jsonQuoted.group()
+
+        if quotedStr != "quotedStr":
             length = len(quotedStr)
-            quotedStr = quotedStr[1:length-1]
-            resFilesQuoted.append(quotedStr)
-            luaFilesNameDict[quotedStr] = "line: " + '%d'%num + "  in  "+ fileName
+            quotedStr = quotedStr[1:length-1] # remove "
+            resFilesQuoted[quotedStr] = quotedStr
+            if luaFilesNameDict.get(quotedStr, -1) == -1:
+                luaFilesNameDict[quotedStr] = []
+            luaFilesNameDict[quotedStr].append("line: " + '%d'%lineNum + " in \"" + fileName + "\"")
+        ################ special form ################
+        sp_pngQuoted = specialPngRegEx.search(lineContent)
+        sp_jpgQuoted = specialJpgRegEx.search(lineContent)
+        sp_plistQuoted = specialPlistRegEx.search(lineContent)
+        sp_csbQuoted = specialCsbRegEx.search(lineContent)
+        sp_wavQuoted = specialWavRegEx.search(lineContent)
+        sp_atlasQuoted = specialAtlasRegEx.search(lineContent)
+        sp_pvrQuoted = specialPvrRegEx.search(lineContent)
+        sp_jsonQuoted = specialJsonRegEx.search(lineContent)
+        sp_quotedStr = "sp_quotedStr"
+        if sp_pngQuoted:
+            sp_quotedStr = sp_pngQuoted.group()
+        elif sp_jpgQuoted:
+            sp_quotedStr = sp_jpgQuoted.group()
+        elif sp_plistQuoted:
+            sp_quotedStr = sp_plistQuoted.group()
+        elif sp_csbQuoted:
+            sp_quotedStr = sp_csbQuoted.group()
+        elif sp_wavQuoted:
+            sp_quotedStr = sp_wavQuoted.group()
+        elif sp_atlasQuoted:
+            sp_quotedStr = sp_atlasQuoted.group()           
+        elif sp_pvrQuoted:
+            sp_quotedStr = sp_pvrQuoted.group()
+        elif sp_jsonQuoted:
+            sp_quotedStr = sp_jsonQuoted.group()
+
+        if sp_quotedStr != "sp_quotedStr":
+            if special_files.get(fileName, -1) == -1:
+                special_files[fileName] = []
+            special_files[fileName].append("  line: " + '%d'%lineNum + '\n')
+
+        ################ encoded mode check ################
+        encoded = chardet.detect(lineContent)
+        mode = encoded['encoding']
+        if mode == 'utf-8':
+            if lineContent.find('--') == -1:
+                mdError.write("illegal characters in line: " + '%d'%lineNum + " in " + fileName + '\n')
+            else:
+                mdError.write("line: " + '%d'%lineNum + " in " + fileName + ", maybe a comment, please check it if necessary.\n")
+
+        count = count + 1
     f.close()
+    mdError.close()
 
 def matchResFileName(fileQuoted):
-    f = open(logFile, 'a')
+    f = open(log_file, 'a')
     quotedRegEx = re.compile(fileQuoted, re.IGNORECASE)
     count = 0
-    for name in resFiles:
-        nameQuoted = quotedRegEx.search(name)
+    index = 0
+    while index < len(resFiles):
+        nameQuoted = quotedRegEx.search(resFiles[index])
         if nameQuoted:
             if 0 != cmp(nameQuoted.group(0), fileQuoted):
-                f.write("error in " + luaFilesNameDict[fileQuoted] + "\n")
+                for name in luaFilesNameDict[fileQuoted]:
+                    f.write("\"" + fileQuoted + "\" has ignored case in " + name + "\n")
             break
         else:
             count = count + 1
-        if count == len(resFiles):
-            f.write("no such file: " + "'" + fileQuoted + "'" + " -> " + luaFilesNameDict[fileQuoted] + "\n")
+        index = index + 1
+
+    if count == len(resFiles):
+        for name in luaFilesNameDict[fileQuoted]:
+            f.write("no such res file: " + "\"" + fileQuoted + "\"" + " in " + name + "\n")
     f.close()
+
+# output illegal mode string
+illegalMode = open(illegal_file, 'w')
+illegalMode.close()
 
 for name in luaFiles:
     readLuaFile(name)
 
-f = open(logFile, 'w')
+f = open(log_file, 'w')
 f.close()
 
+# output errors
 for name in resFilesQuoted:
     matchResFileName(name)
+
+# output illegal mode res files
+illegal_res = open(illegal_res_file, 'w')
+for name in resFiles:
+    encoded = chardet.detect(name)
+    mode = encoded['encoding']
+    if mode != 'ascii':
+        illegal_res.write("illegal encoded mode: \"" + name + "\"\n")
+illegal_res.close()
+
+# output special string
+sp = open(special_log_file, 'w')
+for name_list in special_files:
+    sp.write(name_list + ":\n")
+    for name in special_files[name_list]:
+        sp.write(name)
+sp.close()
