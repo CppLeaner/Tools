@@ -31,7 +31,7 @@ for filename in filePathVector:
         print(mode)
        
 # pngquant.exe path
-pngquantPath = "C:\Users\jiayong.averson\Desktop\pngquant.exe -f --ext .png --quality 50-80 "
+pngquantPath = "./pngquant.exe -f --ext .png --quality 50-80 "
 #get .Png File Name
 for filePath in pngFile:
 	os.system(pngquantPath + filePath)
