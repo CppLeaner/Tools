@@ -1,2 +1,2 @@
 # Tools
-some userful tools using python or other programming language
+some userful tools using python/.bat programming language
